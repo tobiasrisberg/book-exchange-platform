@@ -395,4 +395,32 @@ def exchange_details(exchange_id):
     return render_template('exchange_details.html', exchange=exchange)
 
 
+@main.route('/remove_book/<int:book_id>', methods=['GET', 'POST'])
+@login_required
+def remove_book(book_id):
+    book = Book.query.get_or_404(book_id)
+    if book.owner != current_user:
+        flash('You are not authorized to remove this book.', 'danger')
+        return redirect(url_for('main.my_books'))
+
+    # Check if the book is involved in pending exchanges
+    pending_requests = ExchangeRequest.query.filter(
+        (ExchangeRequest.book_requested_id == book.id) |
+        (ExchangeRequest.book_offered_id == book.id)
+    ).filter(ExchangeRequest.status == 'pending').all()
+
+    if pending_requests:
+        flash('This book is involved in pending exchange requests and cannot be removed.', 'warning')
+        return redirect(url_for('main.my_books'))
+
+    # Remove the book
+    db.session.delete(book)
+    db.session.commit()
+    flash('Book removed successfully.', 'success')
+    return redirect(url_for('main.my_books'))
+
+
+
+
+
 

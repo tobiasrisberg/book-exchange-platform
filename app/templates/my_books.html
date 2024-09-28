@@ -5,18 +5,24 @@
 {% block content %}
 <h2>My Books</h2>
 {% if books %}
-    <ul>
+    <div class="row">
     {% for book in books %}
-        <li>
-            <strong>{{ book.title }}</strong> by {{ book.author }}
-            <br>
-            Genre: {{ book.genre.name if book.genre else 'Unknown' }}
-            <br>
-            ISBN: {{ book.isbn }}
-        </li>
+        <div class="col-md-4">
+            <div class="card mb-3">
+                {% if book.image_url %}
+                <img src="{{ book.image_url }}" class="card-img-top" alt="{{ book.title }} cover">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ book.title }}</h5>
+                    <p class="card-text"><strong>Author:</strong> {{ book.author }}</p>
+                    <p class="card-text"><strong>Genre:</strong> {{ book.genre.name if book.genre else 'Unknown' }}</p>
+                    <a href="{{ url_for('main.book_details', book_id=book.id) }}" class="btn btn-primary">View Details</a>
+                </div>
+            </div>
+        </div>
     {% endfor %}
-    </ul>
+    </div>
 {% else %}
-    <p>You haven't added any books yet.</p>
+    <p>You have not added any books yet.</p>
 {% endif %}
 {% endblock %}
