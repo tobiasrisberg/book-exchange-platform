@@ -2,9 +2,9 @@ from app import db
 from flask_login import UserMixin
 
 
-exchange_books = db.Table('exchange_books',
-    db.Column('exchange_request_id', db.Integer, db.ForeignKey('exchange_requests.id'), primary_key=True),
-    db.Column('book_id', db.Integer, db.ForeignKey('books.id'), primary_key=True)
+user_genres = db.Table('user_genres',
+    db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
+    db.Column('genre_id', db.Integer, db.ForeignKey('genres.id'))
 )
 
 class User(UserMixin, db.Model):
@@ -15,6 +15,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(128), nullable=False)  # Store hashed passwords
     email = db.Column(db.String(120), unique=True, nullable=False)
     favorite_genres = db.Column(db.String(200))
+    genres = db.relationship('Genre', secondary=user_genres, backref='users')
     
     # Relationships
     books = db.relationship('Book', backref='owner', lazy=True)
@@ -47,6 +48,11 @@ class Book(db.Model):
         return f'<Book {self.title} by {self.author}>'
     
 
+exchange_books = db.Table('exchange_books',
+    db.Column('exchange_request_id', db.Integer, db.ForeignKey('exchange_requests.id'), primary_key=True),
+    db.Column('book_id', db.Integer, db.ForeignKey('books.id'), primary_key=True)
+)
+
 class ExchangeRequest(db.Model):
     __tablename__ = 'exchange_requests'
     
@@ -66,3 +72,10 @@ class ExchangeRequest(db.Model):
     
     def __repr__(self):
         return f'<ExchangeRequest from {self.from_user_id} to {self.to_user_id}>'
+    
+
+class Genre(db.Model):
+    __tablename__ = 'genres'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    

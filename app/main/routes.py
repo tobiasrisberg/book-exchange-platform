@@ -7,7 +7,7 @@ from flask import (
     request,
 )
 from flask_login import login_required, current_user
-from app.models import Book, ExchangeRequest, User
+from app.models import Book, ExchangeRequest, User, Genre
 from app import db
 from app.utils import get_book_details
 from app.forms import (
@@ -16,6 +16,7 @@ from app.forms import (
     SelectBooksForm,
     ConfirmExchangeForm,
     SearchForm,
+    ProfileForm,
 )
 
 main = Blueprint('main', __name__)
@@ -255,5 +256,26 @@ def discover():
         popular_books=popular_books
     )
 
+
+@main.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    form = ProfileForm(obj=current_user)
+    genres = Genre.query.all()
+    form.genres.choices = [(genre.id, genre.name) for genre in genres]
+
+    if form.validate_on_submit():
+        current_user.username = form.username.data
+        current_user.email = form.email.data
+        selected_genres = Genre.query.filter(Genre.id.in_(form.genres.data)).all()
+        current_user.genres = selected_genres
+        db.session.commit()
+        flash('Your profile has been updated.', 'success')
+        return redirect(url_for('main.profile'))
+
+    # Pre-select the user's genres
+    form.genres.data = [genre.id for genre in current_user.genres]
+
+    return render_template('profile.html', form=form)
 
 

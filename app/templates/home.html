@@ -5,7 +5,7 @@
 {% block content %}
 {% if current_user.is_authenticated %}
     <h1>Welcome, {{ current_user.username }}!</h1>
-    <p>Your favorite genres: {{ current_user.favorite_genres }}</p>
+    <p>Your favorite genres: {{ current_user.selected_genres }}</p>
     <p><a href="{{ url_for('main.add_book') }}">Add a new book</a></p>
     <p><a href="{{ url_for('auth.logout') }}">Logout</a></p>
 {% else %}

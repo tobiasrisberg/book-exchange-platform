@@ -14,10 +14,10 @@ class RegistrationForm(FlaskForm):
         'Username', validators=[DataRequired(), Length(min=2, max=64)]
     )
     email = StringField('Email', validators=[DataRequired(), Email()])
-    favorite_genres = StringField('Favorite Genres')
     password = PasswordField(
         'Password', validators=[DataRequired(), Length(min=6)]
     )
+    genres = SelectMultipleField('Favorite Genres', coerce=int)
     submit = SubmitField('Register')
 
 class LoginForm(FlaskForm):
@@ -52,3 +52,9 @@ class ConfirmExchangeForm(FlaskForm):
 class SearchForm(FlaskForm):
     query = StringField('Search')
     submit = SubmitField('Search')
+
+class ProfileForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=2, max=64)])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    genres = SelectMultipleField('Favorite Genres', coerce=int)
+    submit = SubmitField('Update Profile')

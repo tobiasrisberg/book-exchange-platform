@@ -7,7 +7,7 @@ from flask import (
     request,
 )
 from flask_login import login_user, logout_user, login_required, current_user
-from app.models import User
+from app.models import User, Genre
 from app import db
 from app.forms import RegistrationForm, LoginForm
 
@@ -18,18 +18,21 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for('main.home'))
     form = RegistrationForm()
+    genres = Genre.query.all()
+    form.genres.choices = [(genre.id, genre.name) for genre in genres]
+
     if form.validate_on_submit():
         username = form.username.data
         email = form.email.data
         password = form.password.data
-        favorite_genres = form.favorite_genres.data
+        selected_genres = Genre.query.filter(Genre.id.in_(form.genres.data)).all()
 
         user = User.query.filter_by(username=username).first()
         if user:
             flash('Username already exists. Please choose a different one.', 'danger')
             return redirect(url_for('auth.register'))
 
-        new_user = User(username=username, email=email, favorite_genres=favorite_genres)
+        new_user = User(username=username, email=email, genres=selected_genres)
         new_user.set_password(password)
         db.session.add(new_user)
         db.session.commit()
