@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Confirm Exchange{% endblock %}
+
+{% block content %}
+<h2>Confirm Exchange with {{ exchange_request.to_user.username }}</h2>
+<p>{{ exchange_request.to_user.username }} is willing to exchange their book "{{ exchange_request.book_requested.title }}" for one of the following books:</p>
+
+<form method="POST">
+    {{ form.hidden_tag() }}
+    {% for value, label in form.selected_book.choices %}
+        <div>
+            <input type="radio" name="{{ form.selected_book.name }}" value="{{ value }}">
+            {{ label }}
+        </div>
+    {% endfor %}
+    <br>
+    {{ form.confirm() }} {{ form.decline() }}
+</form>
+{% endblock %}

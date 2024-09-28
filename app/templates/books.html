@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Available Books{% endblock %}
+
+{% block content %}
+<h2>Available Books for Exchange</h2>
+
+<!-- Add a link to view all books -->
+<p><a href="{{ url_for('main.books') }}">View All Books</a></p>
+
+<form method="GET" action="{{ url_for('main.search_books') }}"></form>
+    <input type="text" name="query" placeholder="Search by title, author, or genre">
+    <input type="submit" value="Search">
+</form>
+
+{% if books %}
+    <ul>
+    {% for book in books %}
+        <li>
+            <strong>{{ book.title }}</strong> by {{ book.author }}
+            <br>
+            Genre: {{ book.genre }}
+            <br>
+            Owner: {{ book.owner.username }}
+            <br>
+            <a href="{{ url_for('main.book_details', book_id=book.id) }}">View Details</a>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No books are currently available for exchange.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Select Books to Exchange{% endblock %}
+
+{% block content %}
+<h2>Select Books from {{ exchange_request.from_user.username }}</h2>
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <p>Select the books you're willing to accept in exchange for your book "{{ exchange_request.book_requested.title }}":</p>
+    {% for value, label in form.selected_books.choices %}
+        <div>
+            <input type="checkbox" name="{{ form.selected_books.name }}" value="{{ value }}">
+            {{ label }}
+        </div>
+    {% endfor %}
+    <br>
+    {{ form.submit() }}
+</form>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Book Details{% endblock %}
+
+{% block content %}
+<h2>{{ book.title }}</h2>
+<p><strong>Author:</strong> {{ book.author }}</p>
+<p><strong>Genre:</strong> {{ book.genre }}</p>
+<p><strong>ISBN:</strong> {{ book.isbn }}</p>
+<p><strong>Owner:</strong> {{ book.owner.username }}</p>
+
+{% if book.owner != current_user %}
+    <form action="{{ url_for('main.request_exchange', book_id=book.id) }}" method="POST">
+        {{ form.hidden_tag() }}
+        {{ form.submit() }}
+    </form>
+{% else %}
+    <p>This is your book.</p>
+{% endif %}
+
+<a href="{{ url_for('main.books') }}">Back to Book List</a>
+{% endblock %}

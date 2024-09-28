@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Exchange Requests{% endblock %}
+
+{% block content %}
+<h2>Incoming Exchange Requests</h2>
+{% if requests %}
+    <ul>
+    {% for req in requests %}
+        <li>
+            <p>{{ req.from_user.username }} wants to exchange for your book "{{ req.book_requested.title }}"</p>
+            <!-- List offered books if implemented -->
+            <form action="{{ url_for('main.respond_exchange', request_id=req.id, action='accept') }}" method="POST">
+                <button type="submit">Accept</button>
+            </form>
+            <form action="{{ url_for('main.respond_exchange', request_id=req.id, action='decline') }}" method="POST">
+                <button type="submit">Decline</button>
+            </form>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No incoming exchange requests.</p>
+{% endif %}
+{% endblock %}

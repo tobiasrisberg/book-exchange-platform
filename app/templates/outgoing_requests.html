@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Exchange Responses{% endblock %}
+
+{% block content %}
+<h2>Exchange Responses</h2>
+{% if requests %}
+    <ul>
+    {% for req in requests %}
+        <li>
+            <p>
+                {% if req.status == 'responded' %}
+                    {{ req.to_user.username }} has selected books they are willing to accept in exchange for "{{ req.book_requested.title }}".
+                    <a href="{{ url_for('main.confirm_exchange', request_id=req.id) }}">View and Confirm Exchange</a>
+                {% elif req.status == 'accepted' %}
+                    Exchange completed with {{ req.to_user.username }} for "{{ req.book_requested.title }}".
+                {% elif req.status == 'declined' %}
+                    {{ req.to_user.username }} has declined the exchange request for "{{ req.book_requested.title }}".
+                {% endif %}
+            </p>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No responses to your exchange requests at this time.</p>
+{% endif %}
+{% endblock %}
