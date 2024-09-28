@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Discover{% endblock %}
+
+{% block content %}
+<h2>Discover New Books</h2>
+
+<h3>Recommended for You</h3>
+{% if recommended_books %}
+    <ul>
+    {% for book in recommended_books %}
+        <li>
+            <strong>{{ book.title }}</strong> by {{ book.author }}
+            <br>
+            Genre: {{ book.genre }}
+            <br>
+            <a href="{{ url_for('main.book_details', book_id=book.id) }}">View Details</a>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No recommendations available at this time.</p>
+{% endif %}
+
+<h3>Recently Added Books</h3>
+{% if recent_books %}
+    <ul>
+    {% for book in recent_books %}
+        <li>
+            <strong>{{ book.title }}</strong> by {{ book.author }}
+            <br>
+            Genre: {{ book.genre }}
+            <br>
+            <a href="{{ url_for('main.book_details', book_id=book.id) }}">View Details</a>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No recent books available.</p>
+{% endif %}
+
+<h3>Popular Books</h3>
+{% if popular_books %}
+    <ul>
+    {% for book, request_count in popular_books %}
+        <li>
+            <strong>{{ book.title }}</strong> by {{ book.author }}
+            <br>
+            Genre: {{ book.genre }}
+            <br>
+            Exchange Requests: {{ request_count }}
+            <br>
+            <a href="{{ url_for('main.book_details', book_id=book.id) }}">View Details</a>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No popular books available.</p>
+{% endif %}
+
+{% endblock %}

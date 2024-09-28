@@ -50,5 +50,5 @@ class ConfirmExchangeForm(FlaskForm):
     decline = SubmitField('Decline Exchange')
 
 class SearchForm(FlaskForm):
-    query = StringField('Search', validators=[DataRequired()])
+    query = StringField('Search')
     submit = SubmitField('Search')

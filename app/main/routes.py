@@ -57,13 +57,12 @@ def my_books():
     return render_template('my_books.html', books=books)
 
 
-@main.route('/books', methods=['GET', 'POST'])
+@main.route('/books')
 @login_required
 def books():
-    form = SearchForm()
-    books = []
-    if form.validate_on_submit():
-        query = form.query.data
+    form = SearchForm(request.args)
+    query = request.args.get('query', '')
+    if query:
         books = Book.query.filter(
             (Book.title.ilike(f'%{query}%')) |
             (Book.author.ilike(f'%{query}%')) |
@@ -223,5 +222,38 @@ def search_books():
         return render_template('books.html', books=books, form=form)
     else:
         return redirect(url_for('main.books'))
+
+
+@main.route('/discover')
+@login_required
+def discover():
+    # Fetch user's favorite genres
+    favorite_genres = [genre.strip() for genre in current_user.favorite_genres.split(',')]
+    # Query books that match favorite genres and are not owned by the user
+    recommended_books = Book.query.filter(
+        Book.genre.in_(favorite_genres),
+        Book.owner_id != current_user.id
+    ).all()
+    # Get recently added books
+    recent_books = Book.query.filter(
+        Book.owner_id != current_user.id
+    ).order_by(Book.id.desc()).limit(10).all()
+    # (Optional) Get popular books based on exchange requests
+    popular_books = db.session.query(
+        Book, db.func.count(ExchangeRequest.id).label('request_count')
+    ).join(ExchangeRequest, ExchangeRequest.book_requested_id == Book.id)\
+    .filter(Book.owner_id != current_user.id)\
+    .group_by(Book.id)\
+    .order_by(db.desc('request_count'))\
+    .limit(10)\
+    .all()
+
+    return render_template(
+        'discover.html',
+        recommended_books=recommended_books,
+        recent_books=recent_books,
+        popular_books=popular_books
+    )
+
 
 
