@@ -7,7 +7,7 @@ from flask import (
     request,
 )
 from flask_login import login_required, current_user
-from app.models import Book, ExchangeRequest, User, Genre
+from app.models import Book, ExchangeRequest, User, Genre, Notification
 from app import db
 from app.utils import get_book_details
 from app.forms import (
@@ -24,7 +24,7 @@ main = Blueprint('main', __name__)
 
 @main.route('/')
 def home():
-    return render_template('home.html')
+    return redirect(url_for('main.discover'))
 
 
 @main.route('/add_book', methods=['GET', 'POST'])
@@ -92,12 +92,12 @@ def request_exchange(book_id):
             flash("You cannot request an exchange for your own book.", 'warning')
             return redirect(url_for('main.book_details', book_id=book_id))
 
+        # Check for existing exchange requests regardless of status
         existing_request = ExchangeRequest.query.filter_by(
             from_user_id=current_user.id,
             to_user_id=book.owner_id,
-            book_requested_id=book.id,
-            status='pending'
-        ).first()
+            book_requested_id=book.id
+        ).filter(ExchangeRequest.status.in_(['pending', 'responded'])).first()
 
         if existing_request:
             flash('You have already sent an exchange request for this book.', 'info')
@@ -111,6 +111,15 @@ def request_exchange(book_id):
             db.session.add(exchange_request)
             db.session.commit()
             flash('Exchange request sent!', 'success')
+
+            # Create a notification
+            notification = Notification(
+                message=f'{current_user.username} wants to exchange for your book "{book.title}".',
+                user_id=book.owner_id,
+                link=url_for('main.incoming_requests')
+            )
+            db.session.add(notification)
+            db.session.commit()
 
         return redirect(url_for('main.book_details', book_id=book_id))
     else:
@@ -156,6 +165,15 @@ def select_books(request_id):
         db.session.commit()
 
         flash('Your selection has been sent to the requester.', 'success')
+
+        notification = Notification(
+            message=f'{current_user.username} has responded to your exchange request for "{exchange_request.book_requested.title}".',
+            user_id=exchange_request.from_user_id,
+            link=url_for('main.outgoing_requests')  # Link to outgoing requests page
+        )
+        db.session.add(notification)
+        db.session.commit()
+
         return redirect(url_for('main.incoming_requests'))
 
     return render_template('select_books.html', exchange_request=exchange_request, form=form)
@@ -260,11 +278,12 @@ def discover():
 @main.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
-    form = ProfileForm(obj=current_user)
+    editing = request.args.get('edit') == 'true'
+    form = ProfileForm()
     genres = Genre.query.all()
     form.genres.choices = [(genre.id, genre.name) for genre in genres]
 
-    if form.validate_on_submit():
+    if request.method == 'POST' and form.validate_on_submit():
         current_user.username = form.username.data
         current_user.email = form.email.data
         selected_genres = Genre.query.filter(Genre.id.in_(form.genres.data)).all()
@@ -273,9 +292,22 @@ def profile():
         flash('Your profile has been updated.', 'success')
         return redirect(url_for('main.profile'))
 
-    # Pre-select the user's genres
-    form.genres.data = [genre.id for genre in current_user.genres]
+    if editing:
+        # Pre-populate the form fields with current user data
+        form.username.data = current_user.username
+        form.email.data = current_user.email
+        form.genres.data = [genre.id for genre in current_user.genres]
 
-    return render_template('profile.html', form=form)
+    return render_template('profile.html', form=form, editing=editing)
 
+
+@main.route('/notifications')
+@login_required
+def notifications():
+    notifications = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.timestamp.desc()).all()
+    # Mark notifications as read
+    for notification in notifications:
+        notification.is_read = True
+    db.session.commit()
+    return render_template('notifications.html', notifications=notifications)
 
