@@ -104,3 +104,17 @@ class Notification(db.Model):
 
     user = db.relationship('User', backref='notifications')
     
+
+class Message(db.Model):
+    __tablename__ = 'messages'
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime(timezone=True), default=datetime.now(timezone.utc))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    book_id = db.Column(db.Integer, db.ForeignKey('books.id'), nullable=False)
+    
+    user = db.relationship('User', backref='messages')
+    book = db.relationship('Book', backref='messages')
+    
+    def __repr__(self):
+        return f'<Message {self.content[:20]}... by {self.user.username}>'

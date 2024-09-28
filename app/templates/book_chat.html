@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Discuss {{ book.title }}{% endblock %}
+
+{% block content %}
+<h2>Discussion for "{{ book.title }}"</h2>
+
+<div class="messages mb-4">
+    {% for message in messages %}
+        <div class="message mb-3">
+            <strong>{{ message.user.username }}</strong> <small>{{ message.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
+            <p>{{ message.content }}</p>
+        </div>
+    {% else %}
+        <p>No messages yet. Be the first to comment!</p>
+    {% endfor %}
+</div>
+
+<form method="POST">
+    {{ csrf_token() }}
+    <div class="form-group">
+        <textarea name="message" class="form-control" rows="3" placeholder="Enter your message..." required></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Send</button>
+</form>
+<a href="{{ url_for('main.book_details', book_id=book.id) }}" class="btn btn-link">Back to Book Details</a>
+
+{% endblock %}

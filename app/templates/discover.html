@@ -2,58 +2,78 @@
 
 {% block title %}Discover{% endblock %}
 
-{% block content %}
-<h2>Discover New Books</h2>
+{% block styles %}
+<style>
+.card-img-top {
+    height: 150px;
+    object-fit: cover;
+}
+</style>
+{% endblock %}
 
-<h3>Recommended for You</h3>
+{% block content %}
+<h2>Recommended Books</h2>
 {% if recommended_books %}
-    <ul>
+<div class="row">
     {% for book in recommended_books %}
-        <li>
-            <strong>{{ book.title }}</strong> by {{ book.author }}
-            <br>
-            Genre: {{ book.genre.name if book.genre else 'Unknown' }}
-            <br>
-            <a href="{{ url_for('main.book_details', book_id=book.id) }}">View Details</a>
-        </li>
+    <div class="col-md-2 col-sm-3 col-4 mb-3">
+        <div class="card h-100">
+            {% if book.image_url %}
+            <img src="{{ book.image_url }}" class="card-img-top img-fluid" alt="{{ book.title }} cover">
+            {% endif %}
+            <div class="card-body p-2">
+                <h6 class="card-title">{{ book.title }}</h6>
+                <p class="card-text"><small>{{ book.author }}</small></p>
+                <a href="{{ url_for('main.book_details', book_id=book.id) }}" class="btn btn-primary btn-sm">Details</a>
+            </div>
+        </div>
+    </div>
     {% endfor %}
-    </ul>
+</div>
 {% else %}
-    <p>No recommendations available at this time.</p>
+<p>No recommended books at this time.</p>
 {% endif %}
 
-<h3>Recently Added Books</h3>
+<h2>Recently Added Books</h2>
 {% if recent_books %}
-    <ul>
+<div class="row">
     {% for book in recent_books %}
-        <li>
-            <strong>{{ book.title }}</strong> by {{ book.author }}
-            <br>
-            Genre: {{ book.genre.name if book.genre else 'Unknown' }}
-            <br>
-            <a href="{{ url_for('main.book_details', book_id=book.id) }}">View Details</a>
-        </li>
+    <div class="col-md-2 col-sm-3 col-4 mb-3">
+        <div class="card h-100">
+            {% if book.image_url %}
+            <img src="{{ book.image_url }}" class="card-img-top img-fluid" alt="{{ book.title }} cover">
+            {% endif %}
+            <div class="card-body p-2">
+                <h6 class="card-title">{{ book.title }}</h6>
+                <p class="card-text"><small>{{ book.author }}</small></p>
+                <a href="{{ url_for('main.book_details', book_id=book.id) }}" class="btn btn-primary btn-sm">Details</a>
+            </div>
+        </div>
+    </div>
     {% endfor %}
-    </ul>
+</div>
 {% else %}
     <p>No recent books available.</p>
 {% endif %}
 
 <h3>Popular Books</h3>
 {% if popular_books %}
-    <ul>
+<div class="row">
     {% for book, request_count in popular_books %}
-        <li>
-            <strong>{{ book.title }}</strong> by {{ book.author }}
-            <br>
-            Genre: {{ book.genre.name if book.genre else 'Unknown' }}
-            <br>
-            Exchange Requests: {{ request_count }}
-            <br>
-            <a href="{{ url_for('main.book_details', book_id=book.id) }}">View Details</a>
-        </li>
+    <div class="col-md-2 col-sm-3 col-4 mb-3">
+        <div class="card h-100">
+            {% if book.image_url %}
+            <img src="{{ book.image_url }}" class="card-img-top img-fluid" alt="{{ book.title }} cover">
+            {% endif %}
+            <div class="card-body p-2">
+                <h6 class="card-title">{{ book.title }}</h6>
+                <p class="card-text"><small>{{ book.author }}</small></p>
+                <a href="{{ url_for('main.book_details', book_id=book.id) }}" class="btn btn-primary btn-sm">Details</a>
+            </div>
+        </div>
+    </div>
     {% endfor %}
-    </ul>
+</div>
 {% else %}
     <p>No popular books available.</p>
 {% endif %}

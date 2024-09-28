@@ -7,7 +7,7 @@ from flask import (
     request,
 )
 from flask_login import login_required, current_user
-from app.models import Book, ExchangeRequest, User, Genre, Notification
+from app.models import Book, ExchangeRequest, User, Genre, Notification, Message
 from app import db
 from app.utils import get_book_details
 from app.forms import (
@@ -277,7 +277,7 @@ def search_books():
         books = Book.query.filter(
             (Book.title.ilike(f'%{query}%')) |
             (Book.author.ilike(f'%{query}%')) |
-            (Book.genre.ilike(f'%{query}%'))
+            (Book.genre.name.ilike(f'%{query}%'))
         ).filter(Book.owner_id != current_user.id, Book.is_available == True).all()
         return render_template('books.html', books=books, form=form)
     else:
@@ -420,7 +420,21 @@ def remove_book(book_id):
     return redirect(url_for('main.my_books'))
 
 
-
+@main.route('/book/<int:book_id>/chat', methods=['GET', 'POST'])
+@login_required
+def book_chat(book_id):
+    book = Book.query.get_or_404(book_id)
+    messages = Message.query.filter_by(book_id=book.id).order_by(Message.timestamp.asc()).all()
+    
+    if request.method == 'POST':
+        content = request.form.get('message')
+        if content:
+            message = Message(content=content, user_id=current_user.id, book_id=book.id)
+            db.session.add(message)
+            db.session.commit()
+            return redirect(url_for('main.book_chat', book_id=book.id))
+    
+    return render_template('book_chat.html', book=book, messages=messages)
 
 
 
