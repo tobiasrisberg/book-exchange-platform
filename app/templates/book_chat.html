@@ -16,12 +16,13 @@
     {% endfor %}
 </div>
 
+<!-- Use the form object -->
 <form method="POST">
-    {{ csrf_token() }}
+    {{ form.hidden_tag() }}
     <div class="form-group">
-        <textarea name="message" class="form-control" rows="3" placeholder="Enter your message..." required></textarea>
+        {{ form.message(class="form-control", rows="3", placeholder="Enter your message...") }}
     </div>
-    <button type="submit" class="btn btn-primary">Send</button>
+    {{ form.submit(class="btn btn-primary") }}
 </form>
 <a href="{{ url_for('main.book_details', book_id=book.id) }}" class="btn btn-link">Back to Book Details</a>
 

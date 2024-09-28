@@ -6,6 +6,8 @@ from wtforms import (
     SelectMultipleField,
     RadioField,
     HiddenField,
+    TextAreaField,
+    BooleanField
 )
 from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError
 
@@ -55,9 +57,9 @@ class ExchangeRequestForm(FlaskForm):
     submit = SubmitField('I Want to Exchange')
 
 class SelectBooksForm(FlaskForm):
-    selected_books = SelectMultipleField(
-        'Select Books', coerce=int, validators=[DataRequired()]
-    )
+    selected_books = BooleanField(
+        'Select Books', validators=[DataRequired()] # coerce=int,
+    ) 
     submit = SubmitField('Send Selection')
     decline = SubmitField('Decline Exchange')
 
@@ -77,3 +79,7 @@ class ProfileForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     genres = SelectMultipleField('Favorite Genres', coerce=int)
     submit = SubmitField('Update Profile')
+
+class MessageForm(FlaskForm):
+    message = TextAreaField('Message', validators=[DataRequired()])
+    submit = SubmitField('Send')

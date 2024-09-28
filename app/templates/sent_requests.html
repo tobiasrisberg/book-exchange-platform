@@ -1,19 +1,31 @@
 {% extends "base.html" %}
 
-{% block title %}Sent Requests{% endblock %}
+{% block title %}Sent Exchange Requests{% endblock %}
 
 {% block content %}
 <h2>Sent Exchange Requests</h2>
-{% if requests %}
-    <ul class="list-group">
-    {% for req in requests %}
-        <li class="list-group-item">
-            <p>You have requested to exchange for "{{ req.book_requested.title }}" owned by {{ req.to_user.username }}.</p>
-            <a href="{{ url_for('main.book_details', book_id=req.book_requested.id) }}" class="btn btn-primary">View Book Details</a>
-        </li>
+{% if sent_requests %}
+    {% for exchange in sent_requests %}
+        <div class="card mb-3">
+            <div class="row no-gutters">
+                {% if exchange.book_requested.image_url %}
+                <div class="col-md-2">
+                    <img src="{{ exchange.book_requested.image_url }}" class="card-img" alt="{{ exchange.book_requested.title }} cover">
+                </div>
+                {% endif %}
+                <div class="col-md-10">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ exchange.book_requested.title }}</h5>
+                        <p class="card-text"><strong>Author:</strong> {{ exchange.book_requested.author }}</p>
+                        <p class="card-text"><strong>Genre:</strong> {{ exchange.book_requested.genre.name if exchange.book_requested.genre else 'Unknown' }}</p>
+                        <p class="card-text"><strong>Status:</strong> {{ exchange.status }}</p>
+                        <a href="{{ url_for('main.book_details', book_id=exchange.book_requested.id) }}" class="btn btn-primary btn-sm">View Book</a>
+                    </div>
+                </div>
+            </div>
+        </div>
     {% endfor %}
-    </ul>
 {% else %}
-    <p>You have no pending exchange requests.</p>
+    <p>You have not sent any exchange requests.</p>
 {% endif %}
 {% endblock %}

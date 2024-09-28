@@ -20,7 +20,7 @@ class User(UserMixin, db.Model):
     genres = db.relationship('Genre', secondary=user_genres, backref='users')
     
     # Relationships
-    books = db.relationship('Book', backref='owner', lazy=True)
+    books = db.relationship('Book', backref='owner', lazy='dynamic')
     sent_requests = db.relationship('ExchangeRequest', foreign_keys='ExchangeRequest.from_user_id', backref='from_user', lazy=True)
     received_requests = db.relationship('ExchangeRequest', foreign_keys='ExchangeRequest.to_user_id', backref='to_user', lazy=True)
 

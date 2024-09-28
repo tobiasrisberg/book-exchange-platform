@@ -16,7 +16,8 @@ from app.forms import (
     SelectBooksForm,
     ConfirmExchangeForm,
     SearchForm,
-    ProfileForm
+    ProfileForm,
+    MessageForm
 )
 
 main = Blueprint('main', __name__)
@@ -174,11 +175,11 @@ def select_books(request_id):
 
     form = SelectBooksForm()
     offered_books = exchange_request.from_user.books.filter_by(is_available=True).all()
-    form.selected_book.choices = [(book.id, f"{book.title} by {book.author}") for book in offered_books]
+    form.selected_books.choices = [(book.id, f"{book.title} by {book.author}") for book in offered_books]
 
     if form.validate_on_submit():
-        if 'confirm' in request.form:
-            selected_book_id = form.selected_book.data
+        if 'submit' in request.form:
+            selected_book_id = form.selected_books.data
             selected_book = Book.query.get_or_404(selected_book_id)
 
             # Update exchange request
@@ -367,11 +368,11 @@ def notifications():
 @main.route('/sent_requests')
 @login_required
 def sent_requests():
-    requests = ExchangeRequest.query.filter_by(
+    sent_requests = ExchangeRequest.query.filter_by(
         from_user_id=current_user.id,
         status='pending'
     ).all()
-    return render_template('sent_requests.html', requests=requests)
+    return render_template('sent_requests.html', sent_requests=sent_requests)
 
 
 @main.route('/history')
@@ -425,16 +426,16 @@ def remove_book(book_id):
 def book_chat(book_id):
     book = Book.query.get_or_404(book_id)
     messages = Message.query.filter_by(book_id=book.id).order_by(Message.timestamp.asc()).all()
+    form = MessageForm()
     
-    if request.method == 'POST':
-        content = request.form.get('message')
-        if content:
-            message = Message(content=content, user_id=current_user.id, book_id=book.id)
-            db.session.add(message)
-            db.session.commit()
-            return redirect(url_for('main.book_chat', book_id=book.id))
+    if form.validate_on_submit():
+        content = form.message.data
+        message = Message(content=content, user_id=current_user.id, book_id=book.id)
+        db.session.add(message)
+        db.session.commit()
+        return redirect(url_for('main.book_chat', book_id=book.id))
     
-    return render_template('book_chat.html', book=book, messages=messages)
+    return render_template('book_chat.html', book=book, messages=messages, form=form)
 
 
 
