@@ -42,8 +42,12 @@ The **Book Exchange Platform** is a web application designed to revolutionize th
 
 1. **Clone the Repository**
 2. **Create and Activate a Virtual Environment**
-3. **Install Dependencies (requirements.txt)**
+3. **Install Dependencies**
+
+           pip install -r requirements.txt
+   
 4. **Initialize the Database**
+   
    Apply the existing migrations to create the database schema:
 
            flask db upgrade
@@ -57,6 +61,7 @@ The **Book Exchange Platform** is a web application designed to revolutionize th
            flask run
 
 7. **Access the Application**
+    
    Open your web browser and navigate to `http://localhost:5000`.
 
 ## Usage Instructions
