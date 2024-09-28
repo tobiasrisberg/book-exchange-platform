@@ -1,6 +1,6 @@
 from app import db
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 user_genres = db.Table('user_genres',
@@ -47,6 +47,7 @@ class Book(db.Model):
     isbn = db.Column(db.String(20))
     owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     is_available = db.Column(db.Boolean, default=True)
+    image_url = db.Column(db.String(500))
     
     def __repr__(self):
         return f'<Book {self.title} by {self.author}>'
@@ -67,7 +68,7 @@ class ExchangeRequest(db.Model):
     book_requested_id = db.Column(db.Integer, db.ForeignKey('books.id'), nullable=False)
     book_offered_id = db.Column(db.Integer, db.ForeignKey('books.id'), nullable=True)
     status = db.Column(db.String(20), default='pending')  # Possible values: pending, responded, accepted, declined
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = db.Column(db.DateTime(timezone=True), default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
     
     # Relationships
     book_requested = db.relationship('Book', foreign_keys=[book_requested_id], backref='requested_in')
@@ -85,12 +86,18 @@ class Genre(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
 
+    def __repr__(self):
+        return f'<Genre {self.name}>'
+
+    def __str__(self):
+        return self.name
+
 
 class Notification(db.Model):
     __tablename__ = 'notifications'
     id = db.Column(db.Integer, primary_key=True)
     message = db.Column(db.String(255), nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime(timezone=True), default=datetime.now(timezone.utc))
     is_read = db.Column(db.Boolean, default=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     link = db.Column(db.String(255))  # URL or route name

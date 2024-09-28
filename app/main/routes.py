@@ -16,7 +16,7 @@ from app.forms import (
     SelectBooksForm,
     ConfirmExchangeForm,
     SearchForm,
-    ProfileForm,
+    ProfileForm
 )
 
 main = Blueprint('main', __name__)
@@ -31,6 +31,9 @@ def home():
 @login_required
 def add_book():
     form = AddBookForm()
+    # genres = Genre.query.all()
+    # form.genre.choices = [(genre.id, genre.name) for genre in genres]
+
     if form.validate_on_submit():
         isbn = form.isbn.data
         book_details = get_book_details(isbn)
@@ -48,6 +51,7 @@ def add_book():
                 author=book_details['author'],
                 genre_id=genre.id,
                 isbn=isbn,
+                image_url=book_details['image_url'],
                 owner=current_user
             )
             db.session.add(new_book)
@@ -164,46 +168,52 @@ def incoming_requests():
 @login_required
 def select_books(request_id):
     exchange_request = ExchangeRequest.query.get_or_404(request_id)
-    if exchange_request.to_user != current_user:
-        flash('Unauthorized action.', 'danger')
+    if exchange_request.to_user_id != current_user.id:
+        flash('You are not authorized to view this exchange request.', 'danger')
         return redirect(url_for('main.incoming_requests'))
-
-    if exchange_request.status != 'pending':
-        flash('This exchange request has already been responded to.', 'info')
-        return redirect(url_for('main.incoming_requests'))
-
-    user_a_books = Book.query.filter_by(owner_id=exchange_request.from_user_id).all()
 
     form = SelectBooksForm()
-    # Populate choices for the SelectMultipleField
-    form.selected_books.choices = [
-        (book.id, f"{book.title} by {book.author}") for book in user_a_books
-    ]
+    offered_books = exchange_request.from_user.books.filter_by(is_available=True).all()
+    form.selected_book.choices = [(book.id, f"{book.title} by {book.author}") for book in offered_books]
 
     if form.validate_on_submit():
-        selected_book_ids = form.selected_books.data
-        if not selected_book_ids:
-            flash('You must select at least one book.', 'warning')
-            return redirect(url_for('main.select_books', request_id=request_id))
+        if 'confirm' in request.form:
+            selected_book_id = form.selected_book.data
+            selected_book = Book.query.get_or_404(selected_book_id)
 
-        selected_books = Book.query.filter(Book.id.in_(selected_book_ids)).all()
-        exchange_request.selected_books.extend(selected_books)
-        exchange_request.status = 'responded'
-        db.session.commit()
+            # Update exchange request
+            exchange_request.selected_books.append(selected_book)
+            exchange_request.status = 'responded'
+            db.session.commit()
 
-        flash('Your selection has been sent to the requester.', 'success')
+            # Create a notification
+            notification = Notification(
+                message=f'{current_user.username} has responded to your exchange request.',
+                user_id=exchange_request.from_user_id,
+                link=url_for('main.responses')
+            )
+            db.session.add(notification)
+            db.session.commit()
 
-        notification = Notification(
-            message=f'{current_user.username} has responded to your exchange request for "{exchange_request.book_requested.title}".',
-            user_id=exchange_request.from_user_id,
-            link=url_for('main.responeses')  # Link to outgoing requests page
-        )
-        db.session.add(notification)
-        db.session.commit()
+            flash('You have responded to the exchange request.', 'success')
+            return redirect(url_for('main.incoming_requests'))
+        elif 'decline' in request.form:
+            exchange_request.status = 'declined'
+            db.session.commit()
 
-        return redirect(url_for('main.incoming_requests'))
+            # Create a notification
+            notification = Notification(
+                message=f'{current_user.username} has declined your exchange request.',
+                user_id=exchange_request.from_user_id,
+                link=url_for('main.sent_requests')
+            )
+            db.session.add(notification)
+            db.session.commit()
 
-    return render_template('select_books.html', exchange_request=exchange_request, form=form)
+            flash('You have declined the exchange request.', 'info')
+            return redirect(url_for('main.incoming_requests'))
+
+    return render_template('select_books.html', form=form, exchange_request=exchange_request, offered_books=offered_books)
 
 @main.route('/responses')
 @login_required

@@ -15,29 +15,18 @@ auth = Blueprint('auth', __name__)
 
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('main.home'))
     form = RegistrationForm()
-    genres = Genre.query.all()
-    form.genres.choices = [(genre.id, genre.name) for genre in genres]
-
     if form.validate_on_submit():
-        username = form.username.data
-        email = form.email.data
-        password = form.password.data
-        selected_genres = Genre.query.filter(Genre.id.in_(form.genres.data)).all()
-
-        user = User.query.filter_by(username=username).first()
-        if user:
-            flash('Username already exists. Please choose a different one.', 'danger')
-            return redirect(url_for('auth.register'))
-
-        new_user = User(username=username, email=email, genres=selected_genres)
-        new_user.set_password(password)
-        db.session.add(new_user)
+        user = User(
+            username=form.username.data,
+            email=form.email.data,
+        )
+        user.set_password(form.password.data)
+        selected_genres = Genre.query.filter(Genre.id.in_(form.favorite_genres.data)).all()
+        user.genres = selected_genres
+        db.session.add(user)
         db.session.commit()
-
-        flash('Registration successful! Please log in.', 'success')
+        flash('Your account has been created! You can now log in.', 'success')
         return redirect(url_for('auth.login'))
     return render_template('register.html', form=form)
 

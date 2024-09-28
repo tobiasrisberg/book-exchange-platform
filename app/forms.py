@@ -7,18 +7,36 @@ from wtforms import (
     RadioField,
     HiddenField,
 )
-from wtforms.validators import DataRequired, Email, Length
+from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError
+
+from app.models import User, Genre
+
 
 class RegistrationForm(FlaskForm):
-    username = StringField(
-        'Username', validators=[DataRequired(), Length(min=2, max=64)]
-    )
+    username = StringField('Username', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField(
-        'Password', validators=[DataRequired(), Length(min=6)]
-    )
-    genres = SelectMultipleField('Favorite Genres', coerce=int)
+    password = PasswordField('Password', validators=[DataRequired()])
+    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
+    
+    # Add the favorite_genres field
+    favorite_genres = SelectMultipleField('Favorite Genres', coerce=int, validators=[DataRequired()])
+    
     submit = SubmitField('Register')
+    
+    def __init__(self, *args, **kwargs):
+        super(RegistrationForm, self).__init__(*args, **kwargs)
+        # Populate the choices for favorite_genres
+        self.favorite_genres.choices = [(genre.id, genre.name) for genre in Genre.query.all()]
+    
+    def validate_username(self, username):
+        user = User.query.filter_by(username=username.data).first()
+        if user:
+            raise ValidationError('Username is already taken. Please choose a different one.')
+    
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
+        if user:
+            raise ValidationError('Email is already registered. Please choose a different one.')
 
 class LoginForm(FlaskForm):
     username = StringField(
@@ -41,6 +59,7 @@ class SelectBooksForm(FlaskForm):
         'Select Books', coerce=int, validators=[DataRequired()]
     )
     submit = SubmitField('Send Selection')
+    decline = SubmitField('Decline Exchange')
 
 class ConfirmExchangeForm(FlaskForm):
     selected_book = RadioField(

@@ -2,6 +2,17 @@
 
 {% block title %}Register{% endblock %}
 
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        $('#favorite_genres').select2({
+            placeholder: "Select favorite genres",
+            allowClear: true
+        });
+    });
+</script>
+{% endblock %}
+
 {% block content %}
 <h2>Register</h2>
 <form method="POST">
@@ -21,13 +32,23 @@
         {% endfor %}
     </div>
     <div class="form-group">
-        {{ form.favorite_genres.label(class="form-label") }}
-        {{ form.favorite_genres(class="form-control") }}
-    </div>
-    <div class="form-group">
         {{ form.password.label(class="form-label") }}
         {{ form.password(class="form-control") }}
         {% for error in form.password.errors %}
+            <small class="text-danger">{{ error }}</small>
+        {% endfor %}
+    </div>
+    <div class="form-group">
+        {{ form.confirm_password.label(class="form-label") }}
+        {{ form.confirm_password(class="form-control") }}
+        {% for error in form.confirm_password.errors %}
+            <small class="text-danger">{{ error }}</small>
+        {% endfor %}
+    </div>
+    <div class="form-group">
+        {{ form.favorite_genres.label(class="form-label") }}
+        {{ form.favorite_genres(class="form-control", id="favorite_genres") }}
+        {% for error in form.favorite_genres.errors %}
             <small class="text-danger">{{ error }}</small>
         {% endfor %}
     </div>

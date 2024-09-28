@@ -10,7 +10,7 @@
         <li>
             <strong>{{ book.title }}</strong> by {{ book.author }}
             <br>
-            Genre: {{ book.genre }}
+            Genre: {{ book.genre.name if book.genre else 'Unknown' }}
             <br>
             ISBN: {{ book.isbn }}
         </li>

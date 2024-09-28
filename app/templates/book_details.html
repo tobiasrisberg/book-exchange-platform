@@ -5,9 +5,13 @@
 {% block content %}
 <h2>{{ book.title }}</h2>
 <p><strong>Author:</strong> {{ book.author }}</p>
-<p><strong>Genre:</strong> {{ book.genre }}</p>
+<p><strong>Genre:</strong> {{ book.genre.name if book.genre else 'Unknown' }}</p>
 <p><strong>ISBN:</strong> {{ book.isbn }}</p>
 <p><strong>Owner:</strong> {{ book.owner.username }}</p>
+
+{% if book.image_url %}
+    <img src="{{ book.image_url }}" alt="{{ book.title }} cover" class="img-fluid">
+{% endif %}
 
 {% if not book.is_available %}
     <p>This book is no longer available for exchange.</p>

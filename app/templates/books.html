@@ -22,13 +22,23 @@
     <ul>
     {% for book in books %}
         <li>
-            <strong>{{ book.title }}</strong> by {{ book.author }}
-            <br>
-            Genre: {{ book.genre }}
-            <br>
-            Owner: {{ book.owner.username }}
-            <br>
-            <a href="{{ url_for('main.book_details', book_id=book.id) }}">View Details</a>
+            <div class="card mb-3">
+                <div class="row no-gutters">
+                    {% if book.image_url %}
+                    <div class="col-md-2">
+                        <img src="{{ book.image_url }}" class="card-img" alt="{{ book.title }} cover">
+                    </div>
+                    {% endif %}
+                    <div class="col-md-10">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ book.title }}</h5>
+                            <p class="card-text"><strong>Author:</strong> {{ book.author }}</p>
+                            <p class="card-text"><strong>Genre:</strong> {{ book.genre.name if book.genre else 'Unknown' }}</p>
+                            <a href="{{ url_for('main.book_details', book_id=book.id) }}" class="btn btn-primary">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </li>
     {% endfor %}
     </ul>

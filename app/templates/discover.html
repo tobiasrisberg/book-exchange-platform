@@ -12,7 +12,7 @@
         <li>
             <strong>{{ book.title }}</strong> by {{ book.author }}
             <br>
-            Genre: {{ book.genre }}
+            Genre: {{ book.genre.name if book.genre else 'Unknown' }}
             <br>
             <a href="{{ url_for('main.book_details', book_id=book.id) }}">View Details</a>
         </li>
@@ -29,7 +29,7 @@
         <li>
             <strong>{{ book.title }}</strong> by {{ book.author }}
             <br>
-            Genre: {{ book.genre }}
+            Genre: {{ book.genre.name if book.genre else 'Unknown' }}
             <br>
             <a href="{{ url_for('main.book_details', book_id=book.id) }}">View Details</a>
         </li>
@@ -46,7 +46,7 @@
         <li>
             <strong>{{ book.title }}</strong> by {{ book.author }}
             <br>
-            Genre: {{ book.genre }}
+            Genre: {{ book.genre.name if book.genre else 'Unknown' }}
             <br>
             Exchange Requests: {{ request_count }}
             <br>

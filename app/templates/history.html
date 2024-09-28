@@ -15,7 +15,11 @@
                     You exchanged "{{ exchange.selected_books[0].title }}" with {{ exchange.from_user.username }}.
                 {% endif %}
             </p>
-            <p><strong>Date:</strong> {{ exchange.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+            {% if exchange.updated_at %}
+                <p><strong>Date:</strong> {{ exchange.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+            {% else %}
+                <p><strong>Date:</strong> N/A</p>
+            {% endif %}
             <a href="{{ url_for('main.exchange_details', exchange_id=exchange.id) }}" class="btn btn-primary">View Details</a>
         </li>
     {% endfor %}

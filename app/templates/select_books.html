@@ -1,19 +1,38 @@
 {% extends "base.html" %}
 
-{% block title %}Select Books to Exchange{% endblock %}
+{% block title %}Select Books{% endblock %}
 
 {% block content %}
-<h2>Select Books from {{ exchange_request.from_user.username }}</h2>
+<h2>Select a Book to Exchange</h2>
+<p>{{ exchange_request.from_user.username }} wants to exchange for your book "{{ exchange_request.book_requested.title }}"</p>
+
 <form method="POST">
     {{ form.hidden_tag() }}
-    <p>Select the books you're willing to accept in exchange for your book "{{ exchange_request.book_requested.title }}":</p>
-    {% for value, label in form.selected_books.choices %}
-        <div>
-            <input type="checkbox" name="{{ form.selected_books.name }}" value="{{ value }}">
-            {{ label }}
+    {% for book in offered_books %}
+    <div class="card mb-3">
+        <div class="row no-gutters">
+            {% if book.image_url %}
+            <div class="col-md-2">
+                <img src="{{ book.image_url }}" class="card-img" alt="{{ book.title }} cover">
+            </div>
+            {% endif %}
+            <div class="col-md-10">
+                <div class="card-body">
+                    <h5 class="card-title">{{ book.title }}</h5>
+                    <p class="card-text"><strong>Author:</strong> {{ book.author }}</p>
+                    <p class="card-text"><strong>Genre:</strong> {{ book.genre.name if book.genre else 'Unknown' }}</p>
+                    <p class="card-text">
+                        {{ form.selected_book(id='book-{{ book.id }}', value=book.id) }}
+                        <label for="book-{{ book.id }}">Select this book</label>
+                    </p>
+                </div>
+            </div>
         </div>
+    </div>
     {% endfor %}
-    <br>
-    {{ form.submit() }}
+    <div class="form-group">
+        {{ form.confirm(class="btn btn-primary") }}
+        {{ form.decline(class="btn btn-danger") }}
+    </div>
 </form>
 {% endblock %}
