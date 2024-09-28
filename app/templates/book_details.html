@@ -9,11 +9,18 @@
 <p><strong>ISBN:</strong> {{ book.isbn }}</p>
 <p><strong>Owner:</strong> {{ book.owner.username }}</p>
 
-{% if book.owner != current_user %}
-    <form action="{{ url_for('main.request_exchange', book_id=book.id) }}" method="POST">
-        {{ form.hidden_tag() }}
-        {{ form.submit() }}
-    </form>
+{% if not book.is_available %}
+    <p>This book is no longer available for exchange.</p>
+{% elif book.owner != current_user %}
+    {% if request_sent %}
+        <p>You have already sent an exchange request for this book.</p>
+        <button class="btn btn-secondary" disabled>I Want to Exchange</button>
+    {% else %}
+        <form action="{{ url_for('main.request_exchange', book_id=book.id) }}" method="POST">
+            {{ form.hidden_tag() }}
+            {{ form.submit(class="btn btn-primary") }}
+        </form>
+    {% endif %}
 {% else %}
     <p>This is your book.</p>
 {% endif %}

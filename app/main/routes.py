@@ -35,10 +35,18 @@ def add_book():
         isbn = form.isbn.data
         book_details = get_book_details(isbn)
         if book_details:
+            # Find or create the Genre
+            genre_name = book_details['genre']
+            genre = Genre.query.filter_by(name=genre_name).first()
+            if not genre:
+                genre = Genre(name=genre_name)
+                db.session.add(genre)
+                db.session.commit()
+
             new_book = Book(
                 title=book_details['title'],
                 author=book_details['author'],
-                genre=book_details['genre'],
+                genre_id=genre.id,
                 isbn=isbn,
                 owner=current_user
             )
@@ -51,10 +59,15 @@ def add_book():
     return render_template('add_book.html', form=form)
 
 
+
 @main.route('/my_books')
 @login_required
 def my_books():
-    books = Book.query.filter_by(owner_id=current_user.id).all()
+    books = Book.query.filter_by(
+        owner_id=current_user.id
+    ).filter(
+        Book.is_available == True
+    ).all()
     return render_template('my_books.html', books=books)
 
 
@@ -67,10 +80,16 @@ def books():
         books = Book.query.filter(
             (Book.title.ilike(f'%{query}%')) |
             (Book.author.ilike(f'%{query}%')) |
-            (Book.genre.ilike(f'%{query}%'))
-        ).filter(Book.owner_id != current_user.id).all()
+            (Book.genre.has(name=query))
+        ).filter(
+            Book.owner_id != current_user.id,
+            Book.is_available == True
+        ).all()
     else:
-        books = Book.query.filter(Book.owner_id != current_user.id).all()
+        books = Book.query.filter(
+            Book.owner_id != current_user.id,
+            Book.is_available == True
+        ).all()
     return render_template('books.html', books=books, form=form)
 
 
@@ -79,7 +98,15 @@ def books():
 def book_details(book_id):
     book = Book.query.get_or_404(book_id)
     form = ExchangeRequestForm()
-    return render_template('book_details.html', book=book, form=form)
+    # Check if an exchange request exists
+    existing_request = ExchangeRequest.query.filter_by(
+        from_user_id=current_user.id,
+        to_user_id=book.owner_id,
+        book_requested_id=book.id
+    ).filter(ExchangeRequest.status.in_(['pending', 'responded'])).first()
+    request_sent = existing_request is not None
+    return render_template('book_details.html', book=book, form=form, request_sent=request_sent)
+
 
 
 @main.route('/request_exchange/<int:book_id>', methods=['POST'])
@@ -169,7 +196,7 @@ def select_books(request_id):
         notification = Notification(
             message=f'{current_user.username} has responded to your exchange request for "{exchange_request.book_requested.title}".',
             user_id=exchange_request.from_user_id,
-            link=url_for('main.outgoing_requests')  # Link to outgoing requests page
+            link=url_for('main.responeses')  # Link to outgoing requests page
         )
         db.session.add(notification)
         db.session.commit()
@@ -178,13 +205,13 @@ def select_books(request_id):
 
     return render_template('select_books.html', exchange_request=exchange_request, form=form)
 
-@main.route('/outgoing_requests')
+@main.route('/responses')
 @login_required
-def outgoing_requests():
-    requests = ExchangeRequest.query.filter_by(from_user_id=current_user.id).filter(
-        ExchangeRequest.status.in_(['responded', 'accepted', 'declined'])
-    ).all()
-    return render_template('outgoing_requests.html', requests=requests)
+def responses():
+    requests = ExchangeRequest.query.filter_by(
+        from_user_id=current_user.id
+    ).filter(ExchangeRequest.status == 'responded').all()
+    return render_template('responses.html', requests=requests)
 
 @main.route('/confirm_exchange/<int:request_id>', methods=['GET', 'POST'])
 @login_required
@@ -213,16 +240,20 @@ def confirm_exchange(request_id):
             exchange_request.book_requested.owner_id = current_user.id
             selected_book.owner_id = exchange_request.to_user_id
 
+            # Mark books as unavailable
+            exchange_request.book_requested.is_available = False
+            selected_book.is_available = False
+
             exchange_request.status = 'accepted'
             db.session.commit()
 
             flash('Exchange completed successfully!', 'success')
-            return redirect(url_for('main.outgoing_requests'))
+            return redirect(url_for('main.history'))
         elif form.decline.data:
             exchange_request.status = 'declined'
             db.session.commit()
             flash('You have declined the exchange.', 'info')
-            return redirect(url_for('main.outgoing_requests'))
+            return redirect(url_for('main.responses'))
 
     return render_template('confirm_exchange.html', exchange_request=exchange_request, form=form)
 
@@ -237,7 +268,7 @@ def search_books():
             (Book.title.ilike(f'%{query}%')) |
             (Book.author.ilike(f'%{query}%')) |
             (Book.genre.ilike(f'%{query}%'))
-        ).filter(Book.owner_id != current_user.id).all()
+        ).filter(Book.owner_id != current_user.id, Book.is_available == True).all()
         return render_template('books.html', books=books, form=form)
     else:
         return redirect(url_for('main.books'))
@@ -246,22 +277,32 @@ def search_books():
 @main.route('/discover')
 @login_required
 def discover():
-    # Fetch user's favorite genres
-    favorite_genres = [genre.strip() for genre in current_user.favorite_genres.split(',')]
-    # Query books that match favorite genres and are not owned by the user
-    recommended_books = Book.query.filter(
-        Book.genre.in_(favorite_genres),
-        Book.owner_id != current_user.id
-    ).all()
+    # Get the user's favorite genres
+    favorite_genres = current_user.genres  # This should be a list of Genre objects
+
+    if favorite_genres:
+        # Get the genre IDs
+        favorite_genre_ids = [genre.id for genre in favorite_genres]
+        # Query books that match the favorite genres and are not owned by the user
+        recommended_books = Book.query.filter(
+            Book.genre_id.in_(favorite_genre_ids),
+            Book.owner_id != current_user.id,
+            Book.is_available == True
+        ).all()
+    else:
+        recommended_books = []
+
     # Get recently added books
     recent_books = Book.query.filter(
-        Book.owner_id != current_user.id
+        Book.owner_id != current_user.id,
+        Book.is_available == True
     ).order_by(Book.id.desc()).limit(10).all()
-    # (Optional) Get popular books based on exchange requests
+
+    # Get popular books based on exchange requests
     popular_books = db.session.query(
         Book, db.func.count(ExchangeRequest.id).label('request_count')
-    ).join(ExchangeRequest, ExchangeRequest.book_requested_id == Book.id)\
-    .filter(Book.owner_id != current_user.id)\
+    ).outerjoin(ExchangeRequest, ExchangeRequest.book_requested_id == Book.id)\
+    .filter(Book.owner_id != current_user.id, Book.is_available == True)\
     .group_by(Book.id)\
     .order_by(db.desc('request_count'))\
     .limit(10)\
@@ -273,6 +314,7 @@ def discover():
         recent_books=recent_books,
         popular_books=popular_books
     )
+
 
 
 @main.route('/profile', methods=['GET', 'POST'])
@@ -310,4 +352,37 @@ def notifications():
         notification.is_read = True
     db.session.commit()
     return render_template('notifications.html', notifications=notifications)
+
+
+@main.route('/sent_requests')
+@login_required
+def sent_requests():
+    requests = ExchangeRequest.query.filter_by(
+        from_user_id=current_user.id,
+        status='pending'
+    ).all()
+    return render_template('sent_requests.html', requests=requests)
+
+
+@main.route('/history')
+@login_required
+def history():
+    # Fetch accepted exchanges involving the current user
+    exchanges = ExchangeRequest.query.filter(
+        ExchangeRequest.status == 'accepted',
+        (ExchangeRequest.from_user_id == current_user.id) | (ExchangeRequest.to_user_id == current_user.id)
+    ).all()
+    return render_template('history.html', exchanges=exchanges)
+
+
+@main.route('/exchange/<int:exchange_id>')
+@login_required
+def exchange_details(exchange_id):
+    exchange = ExchangeRequest.query.get_or_404(exchange_id)
+    if current_user.id not in [exchange.from_user_id, exchange.to_user_id]:
+        flash('You are not authorized to view this exchange.', 'danger')
+        return redirect(url_for('main.history'))
+    return render_template('exchange_details.html', exchange=exchange)
+
+
 

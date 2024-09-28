@@ -5,7 +5,8 @@ from datetime import datetime
 
 user_genres = db.Table('user_genres',
     db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
-    db.Column('genre_id', db.Integer, db.ForeignKey('genres.id'))
+    db.Column('genre_id', db.Integer, db.ForeignKey('genres.id')),
+    db.PrimaryKeyConstraint('user_id', 'genre_id', name='user_genres_pk')
 )
 
 class User(UserMixin, db.Model):
@@ -15,7 +16,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(64), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)  # Store hashed passwords
     email = db.Column(db.String(120), unique=True, nullable=False)
-    favorite_genres = db.Column(db.String(200))
+    # favorite_genres = db.Column(db.String(200))
     genres = db.relationship('Genre', secondary=user_genres, backref='users')
     
     # Relationships
@@ -41,17 +42,20 @@ class Book(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     author = db.Column(db.String(200))
-    genre = db.Column(db.String(100))
+    genre_id = db.Column(db.Integer, db.ForeignKey('genres.id'))
+    genre = db.relationship('Genre', backref='books')
     isbn = db.Column(db.String(20))
     owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    is_available = db.Column(db.Boolean, default=True)
     
     def __repr__(self):
         return f'<Book {self.title} by {self.author}>'
     
 
 exchange_books = db.Table('exchange_books',
-    db.Column('exchange_request_id', db.Integer, db.ForeignKey('exchange_requests.id'), primary_key=True),
-    db.Column('book_id', db.Integer, db.ForeignKey('books.id'), primary_key=True)
+    db.Column('exchange_request_id', db.Integer, db.ForeignKey('exchange_requests.id')),
+    db.Column('book_id', db.Integer, db.ForeignKey('books.id')),
+    db.PrimaryKeyConstraint('exchange_request_id', 'book_id', name='exchange_books_pk')
 )
 
 class ExchangeRequest(db.Model):
@@ -63,6 +67,7 @@ class ExchangeRequest(db.Model):
     book_requested_id = db.Column(db.Integer, db.ForeignKey('books.id'), nullable=False)
     book_offered_id = db.Column(db.Integer, db.ForeignKey('books.id'), nullable=True)
     status = db.Column(db.String(20), default='pending')  # Possible values: pending, responded, accepted, declined
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     book_requested = db.relationship('Book', foreign_keys=[book_requested_id], backref='requested_in')

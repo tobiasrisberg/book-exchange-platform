@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Sent Requests{% endblock %}
+
+{% block content %}
+<h2>Sent Exchange Requests</h2>
+{% if requests %}
+    <ul class="list-group">
+    {% for req in requests %}
+        <li class="list-group-item">
+            <p>You have requested to exchange for "{{ req.book_requested.title }}" owned by {{ req.to_user.username }}.</p>
+            <a href="{{ url_for('main.book_details', book_id=req.book_requested.id) }}" class="btn btn-primary">View Book Details</a>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>You have no pending exchange requests.</p>
+{% endif %}
+{% endblock %}

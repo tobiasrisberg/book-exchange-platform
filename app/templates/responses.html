@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Responses{% endblock %}
+
+{% block content %}
+<h2>Exchange Responses</h2>
+{% if requests %}
+    <ul class="list-group">
+    {% for req in requests %}
+        <li class="list-group-item">
+            <p>{{ req.to_user.username }} has responded to your exchange request for "{{ req.book_requested.title }}".</p>
+            <a href="{{ url_for('main.confirm_exchange', request_id=req.id) }}" class="btn btn-primary">View Response</a>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No responses to your exchange requests at this time.</p>
+{% endif %}
+{% endblock %}

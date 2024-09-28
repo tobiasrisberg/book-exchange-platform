@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Exchange History{% endblock %}
+
+{% block content %}
+<h2>Exchange History</h2>
+{% if exchanges %}
+    <ul class="list-group">
+    {% for exchange in exchanges %}
+        <li class="list-group-item">
+            <p>
+                {% if exchange.from_user_id == current_user.id %}
+                    You exchanged "{{ exchange.book_requested.title }}" with {{ exchange.to_user.username }}.
+                {% else %}
+                    You exchanged "{{ exchange.selected_books[0].title }}" with {{ exchange.from_user.username }}.
+                {% endif %}
+            </p>
+            <p><strong>Date:</strong> {{ exchange.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+            <a href="{{ url_for('main.exchange_details', exchange_id=exchange.id) }}" class="btn btn-primary">View Details</a>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>You have no completed exchanges.</p>
+{% endif %}
+{% endblock %}

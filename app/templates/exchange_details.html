@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Exchange Details{% endblock %}
+
+{% block content %}
+<h2>Exchange Details</h2>
+<p><strong>Date:</strong> {{ exchange.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+<p><strong>With:</strong>
+    {% if exchange.from_user_id == current_user.id %}
+        {{ exchange.to_user.username }}
+    {% else %}
+        {{ exchange.from_user.username }}
+    {% endif %}
+</p>
+<p><strong>Your Book:</strong>
+    {% if exchange.from_user_id == current_user.id %}
+        {{ exchange.selected_books[0].title }}
+    {% else %}
+        {{ exchange.book_requested.title }}
+    {% endif %}
+</p>
+<p><strong>Exchanged for:</strong>
+    {% if exchange.from_user_id == current_user.id %}
+        {{ exchange.book_requested.title }}
+    {% else %}
+        {{ exchange.selected_books[0].title }}
+    {% endif %}
+</p>
+<a href="{{ url_for('main.history') }}" class="btn btn-secondary">Back to History</a>
+{% endblock %}
